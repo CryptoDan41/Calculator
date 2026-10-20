@@ -6,18 +6,26 @@
 #include <QPushButton>
 #include <QPalette>
 #include <QColor>
+#include <QFile>
+#include <QIcon>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    setWindowTitle("Калькулятор");
+
+    this->setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
+    this->setWindowIcon(QIcon());
+
+    QFile file(":/styles/style.qss");
+    if (file.open(QFile::ReadOnly | QFile::Text)) {
+        QTextStream stream(&file);
+        this->setStyleSheet(stream.readAll());
+        file.close();
+    }
 
     resize(400, 500);
     setMinimumSize(400, 500);
     setMaximumSize(400, 500);
-
-    QFont mainFont("Arial", 28);
-    this->setFont(mainFont);
 
     QWidget* centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
@@ -27,7 +35,6 @@ MainWindow::MainWindow(QWidget *parent)
     QLineEdit* display = new QLineEdit();
     mainLayout->addWidget(display, 1);
     display->setReadOnly(true);
-    display->setMinimumHeight(100);
     display->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     display->setFocusPolicy(Qt::NoFocus);
 

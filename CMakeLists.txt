@@ -1,17 +1,23 @@
 cmake_minimum_required(VERSION 3.19)
 project(Calculator LANGUAGES CXX)
 
+set(CMAKE_AUTORCC ON)
+
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
 
 qt_standard_project_setup()
 
 qt_add_executable(Calculator
     WIN32 MACOSX_BUNDLE
-    main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    mainwindow.ui
+    src/main.cpp
+    src/mainwindow.cpp
+    src/mainwindow.h
+    resources/style.qss
+    resources/res.qrc
 )
+
+source_group("Стили калькулятора" FILES resources/style.qss)
+
 
 target_link_libraries(Calculator
     PRIVATE
