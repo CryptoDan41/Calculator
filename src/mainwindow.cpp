@@ -12,10 +12,6 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-
-    this->setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
-    this->setWindowIcon(QIcon());
-
     QFile file(":/styles/style.qss");
     if (file.open(QFile::ReadOnly | QFile::Text)) {
         QTextStream stream(&file);
@@ -37,18 +33,21 @@ MainWindow::MainWindow(QWidget *parent)
     display->setReadOnly(true);
     display->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     display->setFocusPolicy(Qt::NoFocus);
+    display->setMaxLength(14);
+    display->setText("0");
 
     QGridLayout* buttonsLayout = new QGridLayout();
     mainLayout->addLayout(buttonsLayout, 5);
 
-    const QString buttonLabels[4][4] = {
-        {"7", "8", "9", "/"},
+    const QString buttonLabels[5][4] = {
+        {"C", "⌫", "%", "/"},
+        {"7", "8", "9", "+"},
         {"4", "5", "6", "*"},
         {"1", "2", "3", "-"},
-        {"0", "C", "=", "+"}
+        {"±", "0", ".", "="}
     };
 
-    for (int row = 0; row < 4; ++row) {
+    for (int row = 0; row < 5; ++row) {
         for (int col = 0; col < 4; ++col) {
 
             QString text = buttonLabels[row][col];
@@ -69,6 +68,54 @@ MainWindow::MainWindow(QWidget *parent)
                     this->isWaitingForOperand = false;
                 }
 
+                else if (buttonText == "±") {
+                    QString text = display->text();
+                    if (text == "0") return;
+                    double value = text.toDouble();
+                    value = -value;
+                    display->setText(QString::number(value));
+                }
+
+                else if (buttonText == ".") {
+                    if (this->isWaitingForOperand) {
+                        display->setText("0.");
+                        this->isWaitingForOperand = false;
+                        return;
+                    }
+
+                    QString currentText = display->text();
+                    if (currentText.isEmpty()) {
+                        display->setText("0.");
+                        return;
+                    }
+
+                    if (currentText.contains('.')) {
+                        return;
+                    }
+
+                    display->setText(currentText + ".");
+                }
+
+                else if (buttonText == "%") {
+                    QString text = display->text();
+                    if (text == "0") return;
+                    double value = text.toDouble();
+                    value = value / 100.0;
+                    display->setText(QString::number(value));
+                    this->isWaitingForOperand = false;
+                }
+
+                else if (buttonText == "⌫") {
+                    if (this->isWaitingForOperand) return;
+                    if (display->text() == "0") return;
+                    QString text = display->text();
+                    text.chop(1);
+                    if (text.isEmpty() || text == "-") {
+                        text = "0";
+                    }
+                    display->setText(text);
+                }
+
                 else if (buttonText == "+" || buttonText == "-" || buttonText == "*" || buttonText == "/") {
                     this->firstNumber = display->text().toDouble();
                     this->operation = buttonText;
@@ -86,7 +133,7 @@ MainWindow::MainWindow(QWidget *parent)
                         if (secondNumber != 0.0) {
                             result = this->firstNumber / secondNumber;
                         } else {
-                            display->setText("Ошибка (деление на 0)");
+                            display->setText("Ошибка");
                             this->isWaitingForOperand = true;
                             return;
                         }
@@ -98,17 +145,21 @@ MainWindow::MainWindow(QWidget *parent)
                 }
 
                 else {
-
                     if (this->isWaitingForOperand) {
                         display->clear();
                         this->isWaitingForOperand = false;
                     }
 
                     QString currentText = display->text();
-                    if (currentText == "0") {
-                        display->setText(buttonText);
-                    } else {
-                        display->setText(currentText + buttonText);
+                    if (currentText.length() == display->maxLength()) {
+                        return;
+                    }
+                    else {
+                        if (currentText == "0") {
+                            display->setText(buttonText);
+                        } else {
+                            display->setText(currentText + buttonText);
+                        }
                     }
                 }
             });
